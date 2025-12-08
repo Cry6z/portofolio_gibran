@@ -1,0 +1,18 @@
+<svg width="1200" height="800" viewBox="0 0 1200 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="800" rx="48" fill="#050816"/>
+  <rect x="60" y="120" width="1080" height="560" rx="40" fill="url(#aurora)"/>
+  <circle cx="980" cy="230" r="110" fill="url(#pulse)" fill-opacity="0.6"/>
+  <path d="M160 420C340 380 420 520 600 480C780 440 860 520 1040 480" stroke="white" stroke-width="8" stroke-linecap="round" stroke-opacity="0.45"/>
+  <path d="M160 520C340 480 420 620 600 580C780 540 860 620 1040 580" stroke="white" stroke-width="8" stroke-linecap="round" stroke-opacity="0.2"/>
+  <defs>
+    <linearGradient id="aurora" x1="120" y1="680" x2="1080" y2="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0.05" stop-color="#3B82F6"/>
+      <stop offset="0.45" stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#EC4899"/>
+    </linearGradient>
+    <radialGradient id="pulse" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(980 230) rotate(90) scale(110)">
+      <stop stop-color="#FDE68A"/>
+      <stop offset="1" stop-color="#F472B6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+</svg>
