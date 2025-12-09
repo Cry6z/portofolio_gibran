@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 export type Project = {
   id: string;
@@ -17,6 +17,7 @@ export type StackIcon = {
   name: string;
   short: string;
   gradient: string;
+  icon?: string;
 };
 
 export type ContactLink = {
@@ -29,15 +30,29 @@ export type ContactLink = {
 
 export type PortfolioState = {
   profilePhoto: string;
+  navbarIcon: string;
   location: string;
+  projectSectionTitles: {
+    solo: string;
+    team: string;
+  };
+  instagramHandle: string;
+  instagramLink: string;
+  profileStatus: string;
   projects: Project[];
   stacks: StackIcon[];
   contacts: ContactLink[];
 };
 
 type PortfolioContextValue = PortfolioState & {
+  isHydrated: boolean;
   setProfilePhoto: (url: string) => void;
+  setNavbarIcon: (url: string) => void;
   setLocation: (value: string) => void;
+  setInstagramHandle: (value: string) => void;
+  setInstagramLink: (value: string) => void;
+  setProfileStatus: (value: string) => void;
+  setProjectSectionTitle: (key: keyof PortfolioState["projectSectionTitles"], value: string) => void;
   upsertProject: (project: Project) => void;
   deleteProject: (id: string) => void;
   upsertStack: (stack: StackIcon) => void;
@@ -48,7 +63,15 @@ type PortfolioContextValue = PortfolioState & {
 
 const defaultState: PortfolioState = {
   profilePhoto: "/profile.svg",
+  navbarIcon: "/profile.svg",
   location: "Bandung, Indonesia",
+  projectSectionTitles: {
+    solo: "Solo Project",
+    team: "Team Project",
+  },
+  instagramHandle: "strxdale",
+  instagramLink: "https://instagram.com/strxdale",
+  profileStatus: "Available for freelance",
   projects: [
     {
       id: "aurora",
@@ -128,33 +151,81 @@ const STORAGE_KEY = "portfolio_data_v1";
 const PortfolioContext = createContext<PortfolioContextValue | null>(null);
 
 export function PortfolioProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<PortfolioState>(() => {
-    if (typeof window === "undefined") return defaultState;
-    try {
-      const stored = window.localStorage.getItem(STORAGE_KEY);
-      return stored ? JSON.parse(stored) : defaultState;
-    } catch {
-      return defaultState;
-    }
-  });
+  const [state, setState] = useState<PortfolioState>(defaultState);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    try {
+      const stored = window.localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored) as Partial<PortfolioState>;
+        setState({
+          ...defaultState,
+          ...parsed,
+          projects: parsed.projects ?? defaultState.projects,
+          stacks: parsed.stacks ?? defaultState.stacks,
+          contacts: parsed.contacts ?? defaultState.contacts,
+          projectSectionTitles: parsed.projectSectionTitles ?? defaultState.projectSectionTitles,
+          instagramHandle: parsed.instagramHandle ?? defaultState.instagramHandle,
+          instagramLink: parsed.instagramLink ?? defaultState.instagramLink,
+          profileStatus: parsed.profileStatus ?? defaultState.profileStatus,
+        });
+      }
+    } catch {
+      // ignore parse errors
+    } finally {
+      setIsHydrated(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!isHydrated) return;
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [state]);
+  }, [state, isHydrated]);
 
   const value = useMemo<PortfolioContextValue>(
     () => ({
       ...state,
+      isHydrated,
       setProfilePhoto: (url) =>
         setState((prev) => ({
           ...prev,
           profilePhoto: url,
         })),
+      setNavbarIcon: (url) =>
+        setState((prev) => ({
+          ...prev,
+          navbarIcon: url,
+        })),
       setLocation: (value) =>
         setState((prev) => ({
           ...prev,
           location: value,
+        })),
+      setInstagramHandle: (value) =>
+        setState((prev) => ({
+          ...prev,
+          instagramHandle: value,
+        })),
+      setInstagramLink: (value) =>
+        setState((prev) => ({
+          ...prev,
+          instagramLink: value,
+        })),
+      setProfileStatus: (value) =>
+        setState((prev) => ({
+          ...prev,
+          profileStatus: value,
+        })),
+      setProjectSectionTitle: (key, value) =>
+        setState((prev) => ({
+          ...prev,
+          projectSectionTitles: {
+            ...prev.projectSectionTitles,
+            [key]: value,
+          },
         })),
       upsertProject: (project) =>
         setState((prev) => {
