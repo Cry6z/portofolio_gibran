@@ -39,6 +39,7 @@ export type PortfolioState = {
   instagramHandle: string;
   instagramLink: string;
   profileStatus: string;
+  instagramPhoto: string;
   projects: Project[];
   stacks: StackIcon[];
   contacts: ContactLink[];
@@ -52,6 +53,7 @@ type PortfolioContextValue = PortfolioState & {
   setInstagramHandle: (value: string) => void;
   setInstagramLink: (value: string) => void;
   setProfileStatus: (value: string) => void;
+  setInstagramPhoto: (url: string) => void;
   setProjectSectionTitle: (key: keyof PortfolioState["projectSectionTitles"], value: string) => void;
   upsertProject: (project: Project) => void;
   deleteProject: (id: string) => void;
@@ -72,6 +74,7 @@ const defaultState: PortfolioState = {
   instagramHandle: "strxdale",
   instagramLink: "https://instagram.com/strxdale",
   profileStatus: "Available for freelance",
+  instagramPhoto: "/profile.svg",
   projects: [
     {
       id: "aurora",
@@ -170,6 +173,7 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
           instagramHandle: parsed.instagramHandle ?? defaultState.instagramHandle,
           instagramLink: parsed.instagramLink ?? defaultState.instagramLink,
           profileStatus: parsed.profileStatus ?? defaultState.profileStatus,
+          instagramPhoto: parsed.instagramPhoto ?? defaultState.instagramPhoto,
         });
       }
     } catch {
@@ -218,6 +222,11 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
         setState((prev) => ({
           ...prev,
           profileStatus: value,
+        })),
+      setInstagramPhoto: (url) =>
+        setState((prev) => ({
+          ...prev,
+          instagramPhoto: url,
         })),
       setProjectSectionTitle: (key, value) =>
         setState((prev) => ({

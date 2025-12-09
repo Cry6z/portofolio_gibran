@@ -49,6 +49,8 @@ export default function AdminDashboard() {
     setInstagramLink,
     profileStatus,
     setProfileStatus,
+    instagramPhoto,
+    setInstagramPhoto,
     projectSectionTitles,
     setProjectSectionTitle,
     projects,
@@ -66,12 +68,17 @@ export default function AdminDashboard() {
   const [editingStack, setEditingStack] = useState<StackIcon | null>(null);
   const [editingContact, setEditingContact] = useState<ContactLink | null>(null);
 
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return window.localStorage.getItem("admin-authenticated") === "true";
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState("");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = window.localStorage.getItem("admin-authenticated") === "true";
+    setIsAuthenticated(stored);
+    setIsHydrated(true);
+  }, []);
 
   const handleLogin = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -121,6 +128,17 @@ export default function AdminDashboard() {
       href: "",
       icon: "instagram",
     });
+
+  if (!isHydrated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 px-6 text-slate-100">
+        <div className="flex items-center gap-3 text-sm text-slate-400">
+          <span className="h-3 w-3 animate-ping rounded-full bg-blue-400" />
+          Menyiapkan dashboard...
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return (
@@ -199,9 +217,11 @@ export default function AdminDashboard() {
               <p className="text-xs uppercase tracking-[0.4em] text-blue-200">
                 Profil
               </p>
-              <h2 className="text-xl font-semibold text-white">Foto profil, icon navbar & lokasi</h2>
+              <h2 className="text-xl font-semibold text-white">
+                Foto profil, icon navbar & identitas sosial
+              </h2>
               <p className="text-sm text-slate-400">
-                Perbarui gambar yang tampil di hero dan icon navbar beserta informasi lokasi.
+                Perbarui gambar yang tampil di hero, icon navbar, lokasi, serta handle Instagram dan status.
               </p>
             </div>
             <div className="flex flex-col gap-3">
@@ -216,78 +236,155 @@ export default function AdminDashboard() {
               />
             </div>
           </div>
-          <div className="mt-6 flex flex-wrap items-center gap-4">
-            <div className="flex min-w-[240px] flex-1 items-center gap-3 rounded-2xl border border-white/10 bg-slate-900/60 px-4 py-2">
-              <ImageIcon className="h-5 w-5 text-blue-300" />
-              <span
-                className="text-sm text-slate-300"
-                title={profilePhoto}
-                style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-              >
-                {profilePhoto}
-              </span>
-            </div>
-            <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:border-white/40">
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={async (event) => {
-                  const file = event.target.files?.[0];
-                  if (!file) return;
-                  try {
-                    const url = await fileToDataUrl(file);
-                    setProfilePhoto(url);
-                  } catch (error) {
-                    console.error("Failed to load image", error);
-                  }
-                }}
-              />
-              Upload Foto
-            </label>
-          </div>
-          <div className="mt-8 grid gap-4 md:grid-cols-2">
-            <div className="space-y-3">
-              <label className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                URL Icon Navbar
-              </label>
-              <input
-                className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-2 text-sm text-white focus:border-blue-400 focus:outline-none"
-                value={navbarIcon}
-                onChange={(e) => setNavbarIcon(e.target.value)}
-                placeholder="https://icon.png"
-              />
-              <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:border-white/40">
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={async (event) => {
-                    const file = event.target.files?.[0];
-                    if (!file) return;
-                    try {
-                      const url = await fileToDataUrl(file);
-                      setNavbarIcon(url);
-                    } catch (error) {
-                      console.error("Failed to load navbar icon", error);
-                    }
-                  }}
-                />
-                Upload Icon
-              </label>
-            </div>
-            <div className="space-y-3">
-              <label className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                Lokasi
-              </label>
-              <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-900/60 px-4 py-2">
-                <Globe className="h-5 w-5 text-blue-300" />
-                <input
-                  className="bg-transparent text-sm focus:outline-none"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                />
+          <div className="mt-6 grid gap-6 md:grid-cols-2">
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <label className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                  URL Foto Profil
+                </label>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <input
+                    className="flex-1 rounded-2xl border border-white/10 bg-slate-900 px-4 py-2 text-sm text-white focus:border-blue-400 focus:outline-none"
+                    value={profilePhoto}
+                    onChange={(e) => setProfilePhoto(e.target.value)}
+                    placeholder="https://images..."
+                  />
+                  <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-white/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:border-white/40">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (event) => {
+                        const file = event.target.files?.[0];
+                        if (!file) return;
+                        try {
+                          const url = await fileToDataUrl(file);
+                          setProfilePhoto(url);
+                        } catch (error) {
+                          console.error("Failed to load image", error);
+                        }
+                      }}
+                    />
+                    Upload Foto
+                  </label>
+                </div>
               </div>
+
+              <div className="space-y-2">
+                <label className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                  Foto Instagram (untuk kartu)
+                </label>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <input
+                    className="flex-1 rounded-2xl border border-white/10 bg-slate-900 px-4 py-2 text-sm text-white focus:border-blue-400 focus:outline-none"
+                    value={instagramPhoto}
+                    onChange={(e) => setInstagramPhoto(e.target.value)}
+                    placeholder="https://images..."
+                  />
+                  <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-white/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:border-white/40">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (event) => {
+                        const file = event.target.files?.[0];
+                        if (!file) return;
+                        try {
+                          const url = await fileToDataUrl(file);
+                          setInstagramPhoto(url);
+                        } catch (error) {
+                          console.error("Failed to load instagram photo", error);
+                        }
+                      }}
+                    />
+                    Upload Foto IG
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <label className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                  URL Icon Navbar
+                </label>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <input
+                    className="flex-1 rounded-2xl border border-white/10 bg-slate-900 px-4 py-2 text-sm text-white focus:border-blue-400 focus:outline-none"
+                    value={navbarIcon}
+                    onChange={(e) => setNavbarIcon(e.target.value)}
+                    placeholder="https://icon.png"
+                  />
+                  <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-white/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-white transition hover:border-white/40">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (event) => {
+                        const file = event.target.files?.[0];
+                        if (!file) return;
+                        try {
+                          const url = await fileToDataUrl(file);
+                          setNavbarIcon(url);
+                        } catch (error) {
+                          console.error("Failed to load navbar icon", error);
+                        }
+                      }}
+                    />
+                    Upload Icon
+                  </label>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                  Lokasi
+                </label>
+                <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-900/60 px-4 py-2">
+                  <Globe className="h-5 w-5 text-blue-300" />
+                  <input
+                    className="flex-1 bg-transparent text-sm focus:outline-none"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            <div className="space-y-2">
+              <label className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                Instagram Handle
+              </label>
+              <input
+                className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-2 text-sm text-white focus:border-blue-400 focus:outline-none"
+                value={instagramHandle}
+                onChange={(event) => setInstagramHandle(event.target.value)}
+                placeholder="@strxdale"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                Instagram Link
+              </label>
+              <input
+                className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-2 text-sm text-white focus:border-blue-400 focus:outline-none"
+                value={instagramLink}
+                onChange={(event) => setInstagramLink(event.target.value)}
+                placeholder="https://instagram.com/strxdale"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                Status
+              </label>
+              <input
+                className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-2 text-sm text-white focus:border-blue-400 focus:outline-none"
+                value={profileStatus}
+                onChange={(event) => setProfileStatus(event.target.value)}
+                placeholder="Available for freelance"
+              />
             </div>
           </div>
         </section>

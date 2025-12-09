@@ -54,6 +54,7 @@ export default function Home() {
     instagramHandle,
     instagramLink,
     profileStatus,
+    instagramPhoto,
     projectSectionTitles,
   } = usePortfolio();
 
@@ -85,6 +86,7 @@ export default function Home() {
   const resolvedInstagramHandle = instagramHandle?.trim() || instagramContact?.value || "strxdale";
   const resolvedInstagramHref = instagramLink?.trim() || instagramContact?.href || "https://instagram.com/strxdale";
   const resolvedProfileStatus = profileStatus || instagramContact?.label || "Available for freelance";
+  const resolvedInstagramPhoto = instagramPhoto || profilePhoto;
 
   useEffect(() => {
     const phraseInterval = window.setInterval(() => {
@@ -103,13 +105,13 @@ export default function Home() {
           <PillNav
             logo={navbarIcon}
             logoAlt="Gibran Avatar"
-            logoHref="#home"
+            logoHref="/admin"
             items={navLinks}
             activeHref="#home"
-            baseColor="#0f172a"
-            pillColor="rgba(255,255,255,0.12)"
-            hoveredPillTextColor="#ffffff"
-            pillTextColor="#ffffff"
+            baseColor="#ffffffff"
+            pillColor="rgba(255, 255, 255, 0.12)"
+            hoveredPillTextColor="#f00000ff"
+            pillTextColor="#000000ff"
           />
         </div>
       </header>
@@ -192,6 +194,7 @@ export default function Home() {
               grainUrl="/grain.png"
               disableGlow
               contactHref={resolvedInstagramHref}
+              miniAvatarUrl={resolvedInstagramPhoto}
               showDetails={false}
             />
           </div>
@@ -205,26 +208,29 @@ export default function Home() {
             {stacks.map((tool, index) => {
               const hasIcon = Boolean(tool.icon);
               return (
-                <div
-                  key={tool.name}
-                  className={`flex h-16 w-16 items-center justify-center rounded-[22px] text-sm font-semibold text-slate-900 shadow-[0_12px_30px_rgba(8,47,73,0.45)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_25px_35px_rgba(8,47,73,0.45)] ${
-                    hasIcon
-                      ? "overflow-hidden border border-white/10 bg-slate-900/80 p-3"
-                      : `bg-gradient-to-br ${tool.gradient}`
-                  }`}
-                  aria-label={tool.name}
-                  title={tool.name}
-                  style={{ transitionDelay: `${index * 60}ms` }}
-                >
-                  {hasIcon ? (
-                    <img
-                      src={tool.icon}
-                      alt={tool.name}
-                      className="h-full w-full object-contain"
-                    />
-                  ) : (
-                    <span>{tool.short}</span>
-                  )}
+                <div key={tool.name} className="relative group" style={{ transitionDelay: `${index * 60}ms` }}>
+                  <div
+                    className={`flex h-16 w-16 items-center justify-center rounded-[22px] text-sm font-semibold text-slate-900 shadow-[0_12px_30px_rgba(8,47,73,0.45)] transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-[0_25px_35px_rgba(8,47,73,0.45)] ${
+                      hasIcon
+                        ? "overflow-hidden border border-white/10 bg-slate-900/80 p-3"
+                        : `bg-gradient-to-br ${tool.gradient}`
+                    }`}
+                    aria-label={tool.name}
+                  >
+                    {hasIcon ? (
+                      <img
+                        src={tool.icon}
+                        alt={tool.name}
+                        className="h-full w-full object-contain"
+                      />
+                    ) : (
+                      <span>{tool.short}</span>
+                    )}
+                  </div>
+                  <div className="pointer-events-none absolute left-1/2 top-full z-10 mt-3 -translate-x-1/2 rounded-2xl border border-white/10 bg-slate-900/95 px-3 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-slate-100 opacity-0 shadow-[0_8px_25px_rgba(15,23,42,0.45)] transition-all duration-200 group-hover:-translate-y-1 group-hover:opacity-100">
+                    {tool.name}
+                    <span className="absolute inset-x-0 -top-2 mx-auto h-2 w-2 -translate-y-[2px] rotate-45 rounded-sm bg-slate-900/95" />
+                  </div>
                 </div>
               );
             })}
@@ -255,7 +261,7 @@ export default function Home() {
                 <span className="block text-xs font-semibold uppercase tracking-[0.3em] text-blue-200">
                   Lokasi
                 </span>
-                <p className="mt-2">Bandung, Indonesia (UTC+7)</p>
+                <p className="mt-2">Bengkulu, Indonesia (UTC+7)</p>
               </div>
             </div>
           </div>
