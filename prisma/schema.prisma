@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ContactIcon {
+  instagram
+  linkedin
+  github
+  email
+  website
+}
+
+model ProfileSettings {
+  id              String   @id @default(uuid())
+  profilePhoto    String
+  navbarIcon      String
+  instagramPhoto  String
+  location        String   @default("Bandung, Indonesia")
+  instagramHandle String
+  instagramLink   String
+  profileStatus   String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model ProjectSectionTitles {
+  id        String   @id @default(uuid())
+  solo      String   @default("Solo Project")
+  team      String   @default("Team Project")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  category    String
+  stack       String[] @default([])
+  image       String?
+  link        String?
+  highlight   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model StackIcon {
+  id        String   @id @default(uuid())
+  name      String
+  short     String
+  gradient  String?
+  icon      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ContactLink {
+  id        String      @id @default(uuid())
+  label     String
+  value     String
+  href      String
+  icon      ContactIcon
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}

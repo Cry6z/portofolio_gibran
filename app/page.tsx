@@ -108,11 +108,11 @@ export default function Home() {
             logoHref="/admin"
             items={navLinks}
             activeHref="#home"
-            baseColor="#ffffffff"
-            pillColor="rgba(255, 255, 255, 0.12)"
-            hoveredPillTextColor="#f00000ff"
-            pillTextColor="#000000ff"
-          />
+            baseColor="#071c35e6"
+            pillColor="rgba(142, 124, 124, 0.12)"
+            hoveredPillTextColor="#ffffffff"
+            pillTextColor="#eceef0a3"
+          />x
         </div>
       </header>
 
@@ -248,14 +248,14 @@ export default function Home() {
                   Keahlian
                 </span>
                 <p className="mt-2">
-                  Design System, Interaction Design, Frontend Dev, System Architecture
+                  Design System, Interaction Design, Full Stack Dev, System Architecture
                 </p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-4 shadow-[0_12px_30px_rgba(8,47,73,0.35)]">
                 <span className="block text-xs font-semibold uppercase tracking-[0.3em] text-blue-200">
                   Stack
                 </span>
-                <p className="mt-2">React · Next.js · Tailwind · Node · Supabase</p>
+                <p className="mt-2">React · Next.js · Tailwind · Livewire · Laravel</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-4 shadow-[0_12px_30px_rgba(8,47,73,0.35)]">
                 <span className="block text-xs font-semibold uppercase tracking-[0.3em] text-blue-200">

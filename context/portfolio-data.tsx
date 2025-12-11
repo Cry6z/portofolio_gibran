@@ -1,49 +1,10 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { defaultPortfolioState } from "@/lib/portfolio-defaults";
+import type { ContactLink, PortfolioState, Project, StackIcon } from "@/lib/portfolio-types";
 
-export type Project = {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  stack: string[];
-  image: string;
-  link: string;
-};
-
-export type StackIcon = {
-  id: string;
-  name: string;
-  short: string;
-  gradient: string;
-  icon?: string;
-};
-
-export type ContactLink = {
-  id: string;
-  label: string;
-  value: string;
-  href: string;
-  icon: "instagram" | "linkedin" | "github" | "email" | "website";
-};
-
-export type PortfolioState = {
-  profilePhoto: string;
-  navbarIcon: string;
-  location: string;
-  projectSectionTitles: {
-    solo: string;
-    team: string;
-  };
-  instagramHandle: string;
-  instagramLink: string;
-  profileStatus: string;
-  instagramPhoto: string;
-  projects: Project[];
-  stacks: StackIcon[];
-  contacts: ContactLink[];
-};
+const STORAGE_KEY = "portfolio-state";
 
 type PortfolioContextValue = PortfolioState & {
   isHydrated: boolean;
@@ -55,238 +16,188 @@ type PortfolioContextValue = PortfolioState & {
   setProfileStatus: (value: string) => void;
   setInstagramPhoto: (url: string) => void;
   setProjectSectionTitle: (key: keyof PortfolioState["projectSectionTitles"], value: string) => void;
-  upsertProject: (project: Project) => void;
-  deleteProject: (id: string) => void;
-  upsertStack: (stack: StackIcon) => void;
-  deleteStack: (id: string) => void;
-  upsertContact: (contact: ContactLink) => void;
-  deleteContact: (id: string) => void;
+  upsertProject: (project: Project) => Promise<void>;
+  deleteProject: (id: string) => Promise<void>;
+  upsertStack: (stack: StackIcon) => Promise<void>;
+  deleteStack: (id: string) => Promise<void>;
+  upsertContact: (contact: ContactLink) => Promise<void>;
+  deleteContact: (id: string) => Promise<void>;
 };
-
-const defaultState: PortfolioState = {
-  profilePhoto: "/profile.svg",
-  navbarIcon: "/profile.svg",
-  location: "Bandung, Indonesia",
-  projectSectionTitles: {
-    solo: "Solo Project",
-    team: "Team Project",
-  },
-  instagramHandle: "strxdale",
-  instagramLink: "https://instagram.com/strxdale",
-  profileStatus: "Available for freelance",
-  instagramPhoto: "/profile.svg",
-  projects: [
-    {
-      id: "aurora",
-      title: "Aurora Finance Dashboard",
-      description:
-        "Redesigned dashboard multi-platform dengan analitik real-time untuk tim operasi finansial global.",
-      category: "Team Project",
-      stack: ["Next.js", "TypeScript", "Tailwind"],
-      image: "/projects/aurora.svg",
-      link: "https://dribbble.com/shots/12345678",
-    },
-    {
-      id: "atlas",
-      title: "Atlas Travel App",
-      description:
-        "Aplikasi travel planner mobile-first dengan storytelling visual dan itinerary yang adaptif.",
-      category: "Solo Project",
-      stack: ["React Native", "Expo", "Figma"],
-      image: "/projects/atlas.svg",
-      link: "https://www.behance.net/gallery/1234567",
-    },
-    {
-      id: "pulse",
-      title: "Pulse Marketing Site",
-      description:
-        "Situs marketing SaaS dengan tipografi kontras tinggi dan micro interactions berbasis motion.",
-      category: "Studio Collab",
-      stack: ["Next.js", "Framer Motion", "Storybook"],
-      image: "/projects/pulse.svg",
-      link: "https://pulse.app",
-    },
-  ],
-  stacks: [
-    { id: "react", name: "React", short: "R", gradient: "from-cyan-400 to-blue-500" },
-    { id: "next", name: "Next.js", short: "N", gradient: "from-slate-200 to-slate-400" },
-    {
-      id: "tailwind",
-      name: "Tailwind",
-      short: "T",
-      gradient: "from-sky-400 to-indigo-500",
-    },
-    { id: "node", name: "Node.js", short: "Nd", gradient: "from-emerald-400 to-teal-500" },
-    {
-      id: "supabase",
-      name: "Supabase",
-      short: "S",
-      gradient: "from-lime-300 to-emerald-500",
-    },
-  ],
-  contacts: [
-    {
-      id: "ig",
-      label: "Instagram",
-      value: "@gibran.ui",
-      href: "https://instagram.com/gibran.ui",
-      icon: "instagram",
-    },
-    {
-      id: "linkedin",
-      label: "LinkedIn",
-      value: "linkedin.com/in/gibran",
-      href: "https://linkedin.com",
-      icon: "linkedin",
-    },
-    {
-      id: "github",
-      label: "GitHub",
-      value: "github.com/gibrandev",
-      href: "https://github.com",
-      icon: "github",
-    },
-  ],
-};
-
-const STORAGE_KEY = "portfolio_data_v1";
 
 const PortfolioContext = createContext<PortfolioContextValue | null>(null);
 
+const mergeWithDefaults = (partial?: Partial<PortfolioState> | null): PortfolioState => {
+  if (!partial) {
+    return defaultPortfolioState;
+  }
+
+  return {
+    ...defaultPortfolioState,
+    ...partial,
+    projectSectionTitles: {
+      ...defaultPortfolioState.projectSectionTitles,
+      ...(partial.projectSectionTitles ?? {}),
+    },
+    projects: partial.projects ?? defaultPortfolioState.projects,
+    stacks: partial.stacks ?? defaultPortfolioState.stacks,
+    contacts: partial.contacts ?? defaultPortfolioState.contacts,
+  };
+};
+
+const persistState = (snapshot: PortfolioState) => {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+  } catch (error) {
+    console.error("Failed to persist portfolio data", error);
+  }
+};
+
+const ensureId = (id?: string) => {
+  if (id) return id;
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+  return Math.random().toString(36).slice(2, 11);
+};
+
 export function PortfolioProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<PortfolioState>(defaultState);
+  const [state, setState] = useState<PortfolioState>(defaultPortfolioState);
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const stored = window.localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored) as Partial<PortfolioState>;
-        setState({
-          ...defaultState,
-          ...parsed,
-          projects: parsed.projects ?? defaultState.projects,
-          stacks: parsed.stacks ?? defaultState.stacks,
-          contacts: parsed.contacts ?? defaultState.contacts,
-          projectSectionTitles: parsed.projectSectionTitles ?? defaultState.projectSectionTitles,
-          instagramHandle: parsed.instagramHandle ?? defaultState.instagramHandle,
-          instagramLink: parsed.instagramLink ?? defaultState.instagramLink,
-          profileStatus: parsed.profileStatus ?? defaultState.profileStatus,
-          instagramPhoto: parsed.instagramPhoto ?? defaultState.instagramPhoto,
-        });
+    const loadState = () => {
+      if (typeof window === "undefined") {
+        setIsHydrated(true);
+        return;
       }
-    } catch {
-      // ignore parse errors
-    } finally {
-      setIsHydrated(true);
-    }
+
+      try {
+        const stored = window.localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored) as Partial<PortfolioState>;
+          const merged = mergeWithDefaults(parsed);
+          setState(merged);
+        } else {
+          persistState(defaultPortfolioState);
+          setState(defaultPortfolioState);
+        }
+      } catch (error) {
+        console.error("Failed to read stored portfolio data", error);
+        setState(defaultPortfolioState);
+      } finally {
+        setIsHydrated(true);
+      }
+    };
+
+    loadState();
   }, []);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (!isHydrated) return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [state, isHydrated]);
+  const updateState = (updater: (prev: PortfolioState) => PortfolioState) => {
+    setState((prev) => {
+      const next = updater(prev);
+      persistState(next);
+      return next;
+    });
+  };
 
-  const value = useMemo<PortfolioContextValue>(
-    () => ({
+  const value = useMemo<PortfolioContextValue>(() => {
+    return {
       ...state,
       isHydrated,
       setProfilePhoto: (url) =>
-        setState((prev) => ({
+        updateState((prev) => ({
           ...prev,
           profilePhoto: url,
         })),
       setNavbarIcon: (url) =>
-        setState((prev) => ({
+        updateState((prev) => ({
           ...prev,
           navbarIcon: url,
         })),
       setLocation: (value) =>
-        setState((prev) => ({
+        updateState((prev) => ({
           ...prev,
           location: value,
         })),
       setInstagramHandle: (value) =>
-        setState((prev) => ({
+        updateState((prev) => ({
           ...prev,
           instagramHandle: value,
         })),
       setInstagramLink: (value) =>
-        setState((prev) => ({
+        updateState((prev) => ({
           ...prev,
           instagramLink: value,
         })),
       setProfileStatus: (value) =>
-        setState((prev) => ({
+        updateState((prev) => ({
           ...prev,
           profileStatus: value,
         })),
       setInstagramPhoto: (url) =>
-        setState((prev) => ({
+        updateState((prev) => ({
           ...prev,
           instagramPhoto: url,
         })),
       setProjectSectionTitle: (key, value) =>
-        setState((prev) => ({
+        updateState((prev) => ({
           ...prev,
           projectSectionTitles: {
             ...prev.projectSectionTitles,
             [key]: value,
           },
         })),
-      upsertProject: (project) =>
-        setState((prev) => {
-          const exists = prev.projects.find((p) => p.id === project.id);
-          if (exists) {
-            return {
-              ...prev,
-              projects: prev.projects.map((p) => (p.id === project.id ? project : p)),
-            };
-          }
-          return { ...prev, projects: [...prev.projects, project] };
-        }),
-      deleteProject: (id) =>
-        setState((prev) => ({
+      upsertProject: async (project) => {
+        const projectWithId: Project = { ...project, id: ensureId(project.id) };
+        updateState((prev) => {
+          const exists = prev.projects.some((item) => item.id === projectWithId.id);
+          const projects = exists
+            ? prev.projects.map((item) => (item.id === projectWithId.id ? projectWithId : item))
+            : [projectWithId, ...prev.projects];
+          return { ...prev, projects };
+        });
+      },
+      deleteProject: async (id) => {
+        updateState((prev) => ({
           ...prev,
-          projects: prev.projects.filter((p) => p.id !== id),
-        })),
-      upsertStack: (stack) =>
-        setState((prev) => {
-          const exists = prev.stacks.find((s) => s.id === stack.id);
-          if (exists) {
-            return {
-              ...prev,
-              stacks: prev.stacks.map((s) => (s.id === stack.id ? stack : s)),
-            };
-          }
-          return { ...prev, stacks: [...prev.stacks, stack] };
-        }),
-      deleteStack: (id) =>
-        setState((prev) => ({
+          projects: prev.projects.filter((projectItem) => projectItem.id !== id),
+        }));
+      },
+      upsertStack: async (stack) => {
+        const stackWithId: StackIcon = { ...stack, id: ensureId(stack.id) };
+        updateState((prev) => {
+          const exists = prev.stacks.some((item) => item.id === stackWithId.id);
+          const stacks = exists
+            ? prev.stacks.map((item) => (item.id === stackWithId.id ? stackWithId : item))
+            : [...prev.stacks, stackWithId];
+          return { ...prev, stacks };
+        });
+      },
+      deleteStack: async (id) => {
+        updateState((prev) => ({
           ...prev,
-          stacks: prev.stacks.filter((s) => s.id !== id),
-        })),
-      upsertContact: (contact) =>
-        setState((prev) => {
-          const exists = prev.contacts.find((c) => c.id === contact.id);
-          if (exists) {
-            return {
-              ...prev,
-              contacts: prev.contacts.map((c) => (c.id === contact.id ? contact : c)),
-            };
-          }
-          return { ...prev, contacts: [...prev.contacts, contact] };
-        }),
-      deleteContact: (id) =>
-        setState((prev) => ({
+          stacks: prev.stacks.filter((stack) => stack.id !== id),
+        }));
+      },
+      upsertContact: async (contact) => {
+        const contactWithId: ContactLink = { ...contact, id: ensureId(contact.id) };
+        updateState((prev) => {
+          const exists = prev.contacts.some((item) => item.id === contactWithId.id);
+          const contacts = exists
+            ? prev.contacts.map((item) => (item.id === contactWithId.id ? contactWithId : item))
+            : [...prev.contacts, contactWithId];
+          return { ...prev, contacts };
+        });
+      },
+      deleteContact: async (id) => {
+        updateState((prev) => ({
           ...prev,
-          contacts: prev.contacts.filter((c) => c.id !== id),
-        })),
-    }),
-    [state],
-  );
+          contacts: prev.contacts.filter((contact) => contact.id !== id),
+        }));
+      },
+    };
+  }, [state, isHydrated]);
 
   return <PortfolioContext.Provider value={value}>{children}</PortfolioContext.Provider>;
 }
