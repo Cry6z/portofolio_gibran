@@ -43,6 +43,10 @@ export default function AdminDashboard() {
     setNavbarIcon,
     location,
     setLocation,
+    skillsDescription,
+    setSkillsDescription,
+    stackDescription,
+    setStackDescription,
     instagramHandle,
     setInstagramHandle,
     instagramLink,
@@ -387,6 +391,33 @@ export default function AdminDashboard() {
               />
             </div>
           </div>
+
+          <div className="mt-8 grid gap-4 md:grid-cols-2">
+            <label className="space-y-2">
+              <span className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                Deskripsi Keahlian
+              </span>
+              <textarea
+                className="w-full rounded-2xl border border-white/10 bg-slate-900 p-4 text-sm text-white focus:border-blue-400 focus:outline-none"
+                value={skillsDescription}
+                onChange={(event) => setSkillsDescription(event.target.value)}
+                rows={3}
+                placeholder="Ceritakan singkat mengenai skill utama."
+              />
+            </label>
+            <label className="space-y-2">
+              <span className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                Deskripsi Stack
+              </span>
+              <textarea
+                className="w-full rounded-2xl border border-white/10 bg-slate-900 p-4 text-sm text-white focus:border-blue-400 focus:outline-none"
+                value={stackDescription}
+                onChange={(event) => setStackDescription(event.target.value)}
+                rows={3}
+                placeholder="Tuliskan teknologi favoritmu."
+              />
+            </label>
+          </div>
         </section>
 
         {/* Project Section Titles */}
@@ -611,6 +642,14 @@ export default function AdminDashboard() {
                 setEditingStack(null);
               }}
             >
+              <div className="md:col-span-3 flex flex-col gap-1 text-left">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.4em] text-blue-200">
+                  {editingStack.id ? "Edit Stack" : "Stack Baru"}
+                </p>
+                <p className="text-sm text-slate-400">
+                  {editingStack.name ? `Sedang mengedit ${editingStack.name}` : "Isi detail untuk menambahkan stack baru"}
+                </p>
+              </div>
               <input
                 className="rounded-2xl border border-white/10 bg-transparent px-4 py-2 text-sm focus:border-blue-400 focus:outline-none"
                 placeholder="Nama"
@@ -628,6 +667,14 @@ export default function AdminDashboard() {
                   setEditingStack({ ...editingStack, short: e.target.value })
                 }
                 required
+              />
+              <input
+                className="rounded-2xl border border-white/10 bg-transparent px-4 py-2 text-sm focus:border-blue-400 focus:outline-none"
+                placeholder="URL Icon (opsional)"
+                value={editingStack.icon ?? ""}
+                onChange={(e) =>
+                  setEditingStack({ ...editingStack, icon: e.target.value || undefined })
+                }
               />
               <input
                 className="rounded-2xl border border-white/10 bg-transparent px-4 py-2 text-sm focus:border-blue-400 focus:outline-none"
@@ -659,6 +706,19 @@ export default function AdminDashboard() {
                 />
                 Upload Icon
               </label>
+              {editingStack.icon && (
+                <div className="md:col-span-3 flex items-center gap-4 rounded-2xl border border-white/10 bg-slate-900/80 p-3">
+                  <img
+                    src={editingStack.icon}
+                    alt="Preview icon"
+                    className="h-12 w-12 rounded-2xl object-contain bg-white/5 p-2"
+                  />
+                  <div className="text-xs text-slate-400">
+                    <p className="font-semibold text-slate-200">Preview Icon</p>
+                    <p>Gambar terbaru akan tersimpan setelah kamu klik Simpan.</p>
+                  </div>
+                </div>
+              )}
               <div className="flex gap-3 md:col-span-3">
                 <button
                   type="submit"
@@ -686,9 +746,11 @@ export default function AdminDashboard() {
                 : `bg-gradient-to-br ${stack.gradient}`;
               return (
                 <div key={stack.id} className="relative group">
-                  <div
-                    className={`flex h-16 w-16 items-center justify-center rounded-2xl text-lg font-semibold text-slate-900 shadow-lg ${bgClass}`}
-                    title={stack.name}
+                  <button
+                    type="button"
+                    onClick={() => setEditingStack({ ...stack })}
+                    className={`flex h-16 w-16 items-center justify-center rounded-2xl text-lg font-semibold text-slate-900 shadow-lg transition ring-0 ring-blue-400/0 hover:ring-2 ${bgClass}`}
+                    title={`Edit ${stack.name}`}
                   >
                     {hasIcon ? (
                       <img
@@ -701,7 +763,15 @@ export default function AdminDashboard() {
                         <span className="text-base">{stack.short}</span>
                       </div>
                     )}
-                  </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditingStack({ ...stack })}
+                    className="absolute -left-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-slate-900/80 text-slate-200 opacity-0 shadow-lg transition-all duration-200 hover:border-blue-400 hover:text-white group-hover:opacity-100"
+                    aria-label={`Edit stack ${stack.name}`}
+                  >
+                    <Edit3 className="h-4 w-4" />
+                  </button>
                   <button
                     type="button"
                     onClick={() => deleteStack(stack.id)}

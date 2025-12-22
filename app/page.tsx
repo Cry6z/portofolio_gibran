@@ -44,10 +44,13 @@ const heroPhrases = [
 
 export default function Home() {
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const {
     projects,
     stacks,
     contacts,
+    skillsDescription,
+    stackDescription,
     profilePhoto,
     navbarIcon,
     location,
@@ -87,6 +90,20 @@ export default function Home() {
   const resolvedInstagramHref = instagramLink?.trim() || instagramContact?.href || "https://instagram.com/strxdale";
   const resolvedProfileStatus = profileStatus || instagramContact?.label || "Available for freelance";
   const resolvedInstagramPhoto = instagramPhoto || profilePhoto;
+  const resolvedSkillsDescription =
+    skillsDescription?.trim() ||
+    "Design System, Interaction Design, Full Stack Dev, System Architecture";
+  const resolvedStackDescription =
+    stackDescription?.trim() || "React · Next.js · Tailwind · Livewire · Laravel";
+  const resolvedLocation = location?.trim() || "Bengkulu, Indonesia (UTC+7)";
+  const formattedTime =
+    currentTime?.toLocaleTimeString("id-ID", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+      timeZone: "Asia/Jakarta",
+    }) ?? "--:--:--";
 
   useEffect(() => {
     const phraseInterval = window.setInterval(() => {
@@ -96,12 +113,18 @@ export default function Home() {
     return () => window.clearInterval(phraseInterval);
   }, []);
 
+  useEffect(() => {
+    setCurrentTime(new Date());
+    const timer = window.setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   return (
     <div className="relative min-h-screen bg-slate-950 text-slate-100">
       <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[580px] bg-[radial-gradient(circle_at_top,_rgba(98,81,255,0.35),_transparent_55%)]" />
 
       <header className="sticky top-0 z-20 bg-slate-950/80 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-center px-4 py-5 sm:px-6">
+        <div className="relative mx-auto flex w-full max-w-5xl justify-center px-4 py-5 sm:px-6">
           <PillNav
             logo={navbarIcon}
             logoAlt="Gibran Avatar"
@@ -112,7 +135,20 @@ export default function Home() {
             pillColor="rgba(142, 124, 124, 0.12)"
             hoveredPillTextColor="#ffffffff"
             pillTextColor="#eceef0a3"
-          />x
+          />
+          <div className="absolute right-4 top-1/2 hidden -translate-y-1/2 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.4em] text-blue-100 shadow-[0_10px_35px_rgba(8,47,73,0.35)] sm:flex">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+            <span>{formattedTime} WIB</span>
+          </div>
+        </div>
+        <div className="px-4 pb-4 sm:hidden">
+          <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.35em] text-slate-200">
+            <span className="flex items-center gap-2">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+              {formattedTime}
+            </span>
+            <span className="text-slate-400">WIB</span>
+          </div>
         </div>
       </header>
 
@@ -176,7 +212,7 @@ export default function Home() {
             </div>
             <div className="inline-flex w-fit items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-200 transition-all duration-500 hover:border-white/40 hover:-translate-y-0.5">
               <span className="h-2 w-2 rounded-full bg-blue-400" />
-              {location}
+              {resolvedLocation}
             </div>
           </div>
 
@@ -208,7 +244,11 @@ export default function Home() {
             {stacks.map((tool, index) => {
               const hasIcon = Boolean(tool.icon);
               return (
-                <div key={tool.name} className="relative group" style={{ transitionDelay: `${index * 60}ms` }}>
+                <div
+                  key={tool.id ?? `${tool.name}-${index}`}
+                  className="relative group"
+                  style={{ transitionDelay: `${index * 60}ms` }}
+                >
                   <div
                     className={`flex h-16 w-16 items-center justify-center rounded-[22px] text-sm font-semibold text-slate-900 shadow-[0_12px_30px_rgba(8,47,73,0.45)] transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-[0_25px_35px_rgba(8,47,73,0.45)] ${
                       hasIcon
@@ -248,20 +288,20 @@ export default function Home() {
                   Keahlian
                 </span>
                 <p className="mt-2">
-                  Design System, Interaction Design, Full Stack Dev, System Architecture
+                  {resolvedSkillsDescription}
                 </p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-4 shadow-[0_12px_30px_rgba(8,47,73,0.35)]">
                 <span className="block text-xs font-semibold uppercase tracking-[0.3em] text-blue-200">
                   Stack
                 </span>
-                <p className="mt-2">React · Next.js · Tailwind · Livewire · Laravel</p>
+                <p className="mt-2">{resolvedStackDescription}</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-4 shadow-[0_12px_30px_rgba(8,47,73,0.35)]">
                 <span className="block text-xs font-semibold uppercase tracking-[0.3em] text-blue-200">
                   Lokasi
                 </span>
-                <p className="mt-2">Bengkulu, Indonesia (UTC+7)</p>
+                <p className="mt-2">{resolvedLocation}</p>
               </div>
             </div>
           </div>
@@ -422,7 +462,7 @@ export default function Home() {
           <div className="mt-8 flex justify-center">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 px-5 py-2 text-sm text-white">
               <span className="h-2 w-2 rounded-full bg-blue-400" />
-              {location}
+              {resolvedLocation}
             </div>
           </div>
         </section>

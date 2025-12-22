@@ -4,6 +4,8 @@ export const defaultPortfolioState: PortfolioState = {
   profilePhoto: "/profile.svg",
   navbarIcon: "/profile.svg",
   location: "Bandung, Indonesia",
+  skillsDescription: "Design System, Interaction Design, Full Stack Dev, System Architecture",
+  stackDescription: "React · Next.js · Tailwind · Livewire · Laravel",
   projectSectionTitles: {
     solo: "Solo Project",
     team: "Team Project",

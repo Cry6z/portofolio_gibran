@@ -4,13 +4,18 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { defaultPortfolioState } from "@/lib/portfolio-defaults";
 import type { ContactLink, PortfolioState, Project, StackIcon } from "@/lib/portfolio-types";
 
+export type { Project, StackIcon, ContactLink } from "@/lib/portfolio-types";
+
 const STORAGE_KEY = "portfolio-state";
+const MAX_STORAGE_BYTES = 4.5 * 1024 * 1024; // 4.5MB safety limit
 
 type PortfolioContextValue = PortfolioState & {
   isHydrated: boolean;
   setProfilePhoto: (url: string) => void;
   setNavbarIcon: (url: string) => void;
   setLocation: (value: string) => void;
+  setSkillsDescription: (value: string) => void;
+  setStackDescription: (value: string) => void;
   setInstagramHandle: (value: string) => void;
   setInstagramLink: (value: string) => void;
   setProfileStatus: (value: string) => void;
@@ -44,10 +49,55 @@ const mergeWithDefaults = (partial?: Partial<PortfolioState> | null): PortfolioS
   };
 };
 
+const isDeepEqual = <T,>(a: T, b: T) => {
+  if (a === b) return true;
+  try {
+    return JSON.stringify(a) === JSON.stringify(b);
+  } catch {
+    return false;
+  }
+};
+
+const createPersistableState = (snapshot: PortfolioState): Partial<PortfolioState> => {
+  const partial: Partial<PortfolioState> = {};
+  const assignIfChanged = <K extends keyof PortfolioState>(
+    key: K,
+    comparator: (current: PortfolioState[K], baseline: PortfolioState[K]) => boolean = (current, baseline) =>
+      current === baseline
+  ) => {
+    if (!comparator(snapshot[key], defaultPortfolioState[key])) {
+      partial[key] = snapshot[key];
+    }
+  };
+
+  assignIfChanged("profilePhoto");
+  assignIfChanged("navbarIcon");
+  assignIfChanged("location");
+  assignIfChanged("skillsDescription");
+  assignIfChanged("stackDescription");
+  assignIfChanged("projectSectionTitles", isDeepEqual);
+  assignIfChanged("instagramHandle");
+  assignIfChanged("instagramLink");
+  assignIfChanged("profileStatus");
+  assignIfChanged("instagramPhoto");
+  assignIfChanged("projects", isDeepEqual);
+  assignIfChanged("stacks", isDeepEqual);
+  assignIfChanged("contacts", isDeepEqual);
+
+  return partial;
+};
+
 const persistState = (snapshot: PortfolioState) => {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+    const serialized = JSON.stringify(createPersistableState(snapshot));
+    if (serialized.length > MAX_STORAGE_BYTES) {
+      console.warn(
+        `Skipping portfolio persistence – payload (${serialized.length} bytes) exceeds ${MAX_STORAGE_BYTES} bytes`
+      );
+      return;
+    }
+    window.localStorage.setItem(STORAGE_KEY, serialized);
   } catch (error) {
     console.error("Failed to persist portfolio data", error);
   }
@@ -119,6 +169,16 @@ export function PortfolioProvider({ children }: { children: React.ReactNode }) {
         updateState((prev) => ({
           ...prev,
           location: value,
+        })),
+      setSkillsDescription: (value) =>
+        updateState((prev) => ({
+          ...prev,
+          skillsDescription: value,
+        })),
+      setStackDescription: (value) =>
+        updateState((prev) => ({
+          ...prev,
+          stackDescription: value,
         })),
       setInstagramHandle: (value) =>
         updateState((prev) => ({

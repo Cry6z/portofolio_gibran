@@ -29,6 +29,8 @@ export type PortfolioState = {
   profilePhoto: string;
   navbarIcon: string;
   location: string;
+  skillsDescription: string;
+  stackDescription: string;
   projectSectionTitles: {
     solo: string;
     team: string;
