@@ -1,1 +1,1 @@
-portofolio baru memakai next.js dan reactbits component
+![React](https://img.shields.io/badge/React-61DAFB?logo=React&logoColor=blue&labelColor=black)
